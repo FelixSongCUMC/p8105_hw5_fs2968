@@ -14,7 +14,7 @@ set.seed(1)
 
 # Problem 1
 
-First, we need to create our function that takes n people in a room, randomly randomly draws “birthdays” for each person, checks whether there are duplicate birthdays in the group, and returns TRUE or FALSE based on the result.
+First, we need to create our function that takes n people in a room, randomly draws “birthdays” for each person, checks whether there are duplicate birthdays in the group, and returns TRUE or FALSE based on the result.
 
 ```{r}
 #Create our function that takes n
@@ -45,7 +45,12 @@ birthday_result |>
   summarize(prob_of_repeat = mean(repeated)) |> 
   ggplot(aes(x = num, y =prob_of_repeat)) + 
   geom_point()+
-  geom_line()
+  geom_line() + 
+  labs(
+    title = "Likelihood of repeated birthdays by total participants",
+    x = "Number of People",
+    y = "Likelihood of repeat"
+  ) 
 ```
 
 
@@ -107,8 +112,7 @@ df |>
   labs(
     title = "Longitudinal Observations for Control group by week",
     x = "Week",
-    y = "Observation Value",
-    color = "Study Arm"
+    y = "Observation Value"
   ) +
   theme_minimal() +
   theme(legend.position = "right")
@@ -121,14 +125,13 @@ df |>
   labs(
     title = "Longitudinal Observations for Experimental group by week",
     x = "Week",
-    y = "Observation Value",
-    color = "Study Arm"
+    y = "Observation Value"
   ) +
   theme_minimal() +
   theme(legend.position = "right")
 ```
 
-In the plots above comparing the observations over weeks between the control arm and the experimental arm, we can see that the control arm observations have no significant increase or decrease over the 8 weeks, with the final week of observation having a similar distribution/spread to the intial observations with the difference between week 1 and week 8 at `r mean(pull((filter(df, arm=="con", week == 8)), observation) - pull((filter(df, arm=="con", week == 1)), observation))` on average. However, in the experimental arm, we see a gradual increase in observation over time, with the difference between week 1 and week 8 observations at `r mean(pull((filter(df, arm=="exp", week == 8)), observation) - pull((filter(df, arm=="exp", week == 1)), observation))` on average. 
+In the plots above comparing the observations over weeks between the control arm and the experimental arm, we can see that the control arm observations have no significant increase or decrease over the 8 weeks, with the final week of observation having a similar distribution/spread to the initial observations with the difference between week 1 and week 8 at `r mean(pull((filter(df, arm=="con", week == 8)), observation) - pull((filter(df, arm=="con", week == 1)), observation))` on average. However, in the experimental arm, we see a gradual increase in observation over time, with the difference between week 1 and week 8 observations at `r mean(pull((filter(df, arm=="exp", week == 8)), observation) - pull((filter(df, arm=="exp", week == 1)), observation))` on average. 
 
 # Problem 3
 
@@ -163,7 +166,7 @@ Now we can repeat this sampling for mean set to 1,2,3,4,5,6, seeing how the p.va
 # repeat for mean 1,2,3,4,5,6
 
 sample_df = tibble(
-  true_mean = c(1,2,3,4,5,6),
+  true_mean = c(0,1,2,3,4,5,6),
   statistics = map(true_mean, \(mu) norm_samp(n, sigma, mu))
   ) 
 
@@ -193,7 +196,7 @@ sim_summary |>
 
 ```
 
-As we can see in the plot, there is a positive association between the true mean and power. This means that as the true mean increases, the likelihood of a false rejection decreases. This makes sense as the true mean moves further away from our null hypothesis of mean is zero, the more likely we less likely we are to find a significant sample where the sample mean matches the null hypothesis. 
+As we can see in the plot, there is a positive association between the true mean and power. This means that as the true mean increases, the likelihood of a  correctly rejecting the null hypothesis increases. This makes sense as the true mean moves further away from our null hypothesis of mean is zero, the more likely we are to find statistically significant samples where the sample mean differs from the null hypothesis and thus decreasing the type 2 error (false rejections). 
 
 Now we can make a plot showing the average estimate of mu between true means. Then the following plot will be the average estimates only when the null hypothesis is rejected.
 
@@ -201,6 +204,7 @@ Now we can make a plot showing the average estimate of mu between true means. Th
 sim_summary |> 
   ggplot(aes(x = true_mean, y = avg_estimate_all)) + 
   geom_point(size = 2) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
   labs(
     title = "Sample Mean Estimate by true mean ",
     x = "True Mean",
@@ -210,6 +214,7 @@ sim_summary |>
 sim_summary |> 
   ggplot(aes(x = true_mean, y = avg_estimate_rejected)) + 
   geom_point(size = 2) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
   labs(
     title = "Sample Mean Estimate by true mean for null rejected samples",
     x = "True Mean",
@@ -218,7 +223,7 @@ sim_summary |>
 ```
 
 
-As we can see in the plots, the graph for the sample mean estimate in all samples is nearly identifcal to the true mean, while in the plot for only the null rejected samples, we can see that the estimated mean/sample mean is slightly higher than the true mean for true mean 1,2,3, and then is equal to the true mean at 4,5, and 6. This is because for the lower true means, we are more likely to reject the null hypothesis when the sample mean is further away from the null, so it would be skewed up until we reach a point where the sample mean is already far enough away from the null so that most sampels will reject the null hypothesis.
+As we can see in the plots, the graph for the sample mean estimate in all samples is nearly identical to the true mean, while in the plot for only the null rejected samples, we can see that the estimated mean/sample mean is slightly higher than the true mean for true mean 1,2,3, and then is equal to the true mean at 4,5, and 6. This is because for the lower true means, our samples are more likely to have sample means that are further away from the null hypothesis since these are the statistically significant samples where we reject the null, which is set at 0. Samples that have a mean closer to 0 may not be rejected, and thus not included in this filtered dataset. That is until we reach a true mean value where the sample mean is on average already far enough away from the null so that most sampels will reject the null hypothesis and therefore average the sample mean.
 
 
 
